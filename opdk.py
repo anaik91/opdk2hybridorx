@@ -34,22 +34,22 @@ class ApigeeOPDK:
             'Authorization' : f"Basic {value.decode('utf-8')}"
         }
     
-    def list_apis(self):
-        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/apis"
+    def list_apis(self,api_type):
+        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/{api_type}"
         headers = self.get_auth_header()
         r=requests.get(url,headers=headers)
         if r.status_code == 200:
             return r.json()
     
-    def list_api_revisions(self,api_name):
-        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/apis/{api_name}/revisions"
+    def list_api_revisions(self,api_type,api_name):
+        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/{api_type}/{api_name}/revisions"
         headers = self.get_auth_header()
         r=requests.get(url,headers=headers)
         if r.status_code == 200:
             return r.json()
     
-    def fetch_api_revision(self,api_name,revision,export_dir):
-        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/apis/{api_name}/revisions/{revision}?format=bundle"
+    def fetch_api_revision(self,api_type,api_name,revision,export_dir):
+        url = f"{self.protocol}://{self.management_server}:{self.management_port}/v1/o/{self.org}/{api_type}/{api_name}/revisions/{revision}?format=bundle"
         headers = self.get_auth_header()
         r=requests.get(url,headers=headers, stream=True)
         if r.status_code == 200:

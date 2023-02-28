@@ -27,12 +27,11 @@ def create_dir(dir):
     try:
         os.makedirs(dir)
     except FileExistsError:
-        print(f"{dir} already exists")
-
+        print(f"INFO: {dir} already exists")
 
 def list_dir(dir):
     try:
         return os.listdir(dir)
     except FileNotFoundError:
-        print(f"Dir {dir} not found")
+        print(f"ERROR: Directory \"{dir}\" not found")
         sys.exit(1)

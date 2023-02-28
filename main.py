@@ -23,6 +23,7 @@ import json
 def main():
     cfg = parse_config('input.properties')
     skip_export = cfg.getboolean('common','skip_export')
+    api_types = ['apis','sharedflows']
     if not skip_export:
         a=ApigeeOPDK(
             cfg['opdk']['protocol'],
@@ -33,22 +34,31 @@ def main():
             cfg['opdk']['org'],
         )
         api_revision_map={}
-        for each_api in a.list_apis():
-            api_revision_map[each_api]=a.list_api_revisions(each_api)[-1]
-        create_dir(cfg['common']['export_dir'])
-        for k,v in api_revision_map.items():
-            print(f"Exporting API : {k} with revision : {v} ")
-            a.fetch_api_revision(k,v,cfg['common']['export_dir'])
+        for each_api_type in api_types:
+            api_revision_map[each_api_type]={}
+            api_revision_map[each_api_type]['proxies']={}
+            api_revision_map[each_api_type]['export_dir']=cfg['common']['export_dir']+f'/{each_api_type}'
+            create_dir(cfg['common']['export_dir']+f'/{each_api_type}')
+
+            for each_api in a.list_apis(each_api_type):
+                api_revision_map[each_api_type]['proxies'][each_api]=a.list_api_revisions(each_api_type,each_api)[-1]
+        for each_api_type,each_api_type_data in api_revision_map.items():
+            for each_api,each_api_rev in each_api_type_data['proxies'].items():
+                print(f"Exporting API : {each_api} with revision : {each_api_rev} ")
+                a.fetch_api_revision(each_api_type,each_api,each_api_rev,api_revision_map[each_api_type]['export_dir'])
     else:
         print('Skipping API export !')
 
     x=ApigeeXorHybrid(cfg['x']['org'])
     x.set_auth_header(os.getenv('APIGEE_ACCESS_TOKEN'))
-    proxies=list_dir(cfg['common']['export_dir'])
     result = {}
-    for each_bundle in proxies:
-        validation=x.validate_api(f"{cfg['common']['export_dir']}/{each_bundle}")
-        result[each_bundle]=validation
+    for each_api_type in api_types:
+        export_dir = cfg['common']['export_dir']+f'/{each_api_type}'
+        proxies=list_dir(export_dir)
+        result[each_api_type] = {}
+        for each_bundle in proxies:
+            validation=x.validate_api(f"{export_dir}/{each_bundle}")
+            result[each_api_type][each_bundle]=validation
 
     print(json.dumps(result,indent=2))
 
