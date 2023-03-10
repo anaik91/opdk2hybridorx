@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+
 INPUTFILE=$1
 OVERRIDES_FILE="$2"
 
@@ -11,8 +11,7 @@ source $SCRIPT_PATH/utils.sh
 
 export_path $INPUTFILE
 
-APIGEE_ENC_ORG=$("$APIGEECTL_HOME"/apigeectl encode --org $ORG)
-echo "Encoded org -> $APIGEE_ENC_ORG"
+fetch_apigee_org $ORG
 
 components_ready_check $OVERRIDES_FILE
 

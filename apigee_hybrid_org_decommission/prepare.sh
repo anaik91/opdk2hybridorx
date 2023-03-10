@@ -141,6 +141,6 @@ else
 fi
 download_apigee_ctl
 prepare_resources
-# download_pylib "${SCRIPT_PATH}/python/requirements.txt"
+download_pylib "${SCRIPT_PATH}/requirements.txt"
 export PATH=$PATH:$APIGEECTL_HOME
 "$APIGEECTL_HOME"/apigeectl version

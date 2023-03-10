@@ -489,7 +489,6 @@ EOT
   kubectl delete pod -n "$NAMESPACE" "$CASSANDRA_POD_NAME"
 }
 
-
 restart_cassandra() {
   kubectl rollout restart statefulset -n apigee apigee-cassandra-default
   check_cassandra_pods
@@ -504,4 +503,19 @@ purge_cassandra_fs_keyspaces_data() {
     kubectl exec -it -n apigee $cass_pod -- find /opt/apigee/data/apigee-cassandra/ -iname "*${APIGEE_ORG}_hybrid" -type d -maxdepth 2 -exec rm -rf {} +
     sleep 2
   done
+}
+
+fetch_apigee_org() {
+  PROJECT_ID="$1"
+  ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj)')
+  ENC_ORG=$(echo $ORG_DATA| jq -r .metadata.name)
+  ENV_DATA=$(kubectl get apigeeenv -n apigee -o json | jq -c --arg prj "$ENC_ORG" -r '[.items[] | select(.spec.organizationRef==$prj)]')
+  VHOSTS_DATA=$(kubectl get ar -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '[.items[] | select(.metadata.labels.org==$prj)]')
+  overrides_data=$(jq -n \
+              --argjson org "$ORG_DATA" \
+              --argjson envs "$ENV_DATA" \
+              --argjson virtualhosts "$VHOSTS_DATA" \
+              '$ARGS.named'
+  )
+  echo $overrides_data | jq  > overrides_data.json
 }
