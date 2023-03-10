@@ -9,6 +9,11 @@ CASSANDRA_IMAGE=$(cat $INPUTFILE | jq -r .cassandra_client_image)
 CASSANDRA_POD_NAME="cassandra-client-$(date +%s)"
 source $SCRIPT_PATH/utils.sh
 
+export_path $INPUTFILE
+
+APIGEE_ENC_ORG=$("$APIGEECTL_HOME"/apigeectl encode --org $ORG)
+echo "Encoded org -> $APIGEE_ENC_ORG"
+
 components_ready_check $OVERRIDES_FILE
 
 delete_apigee_settings $OVERRIDES_FILE "virtualhost"

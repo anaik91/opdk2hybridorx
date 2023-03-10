@@ -20,18 +20,18 @@ export_path() {
     APIGEECTL_HOME="${HOME}/$(cat $1 | jq -r .apigeectl_installation)/apigeectl"
     APIGEECTL_ROOT="${HOME}/$(cat $1 | jq -r .apigeectl_installation)"
     QUICKSTART_TOOLS=$HOME
-    ISTIO_CTL=$QUICKSTART_TOOLS/asm/istio-1.9.8-asm.6
+    # ISTIO_CTL=$QUICKSTART_TOOLS/asm/istio-1.9.8-asm.6
     export PATH=$PATH:"$QUICKSTART_TOOLS"/kpt
     export PATH=$PATH:"$QUICKSTART_TOOLS"/jq
     export PATH=$ISTIO_CTL/bin:$PATH
     export PATH=$PATH:$APIGEECTL_HOME
-    source "$HOME/google-cloud-sdk/path.bash.inc"
-    source "$HOME/google-cloud-sdk/completion.bash.inc"
-    echo ${GOOGLE_CREDENTIALS} > /tmp/GOOGLE_CREDENTIALS
-    SERVICE_ACCOUNT=$(cat /tmp/GOOGLE_CREDENTIALS | jq -r .client_email)
-    gcloud auth activate-service-account $SERVICE_ACCOUNT \
-                --key-file=/tmp/GOOGLE_CREDENTIALS --project=$PROJECT_ID
-    gcloud config set project $PROJECT_ID
+    # source "$HOME/google-cloud-sdk/path.bash.inc"
+    # source "$HOME/google-cloud-sdk/completion.bash.inc"
+    # echo ${GOOGLE_CREDENTIALS} > /tmp/GOOGLE_CREDENTIALS
+    # SERVICE_ACCOUNT=$(cat /tmp/GOOGLE_CREDENTIALS | jq -r .client_email)
+    # gcloud auth activate-service-account $SERVICE_ACCOUNT \
+    #             --key-file=/tmp/GOOGLE_CREDENTIALS --project=$PROJECT_ID
+    # gcloud config set project $PROJECT_ID
 }
 
 function wait_for_ready(){
