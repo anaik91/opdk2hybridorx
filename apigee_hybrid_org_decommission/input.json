@@ -3,6 +3,6 @@
 	"apigee_org_name": "ci-cloud-workflow-0206",
 	"project_id":"ci-cloud-workflow-0206",
 	"apigeectl_version": "1.9.0",
-	"script_path" : "/usr/local/google/home/ashwinknaik/demo",
+	"script_path" : "/usr/local/google/home/ashwinknaik/mmc-apigee-migrations/apigee_hybrid_org_decommission",
 	"cassandra_client_image" : "us.gcr.io/ashwinknaik-314910/apigee-hybrid-cassandra-client:1.6.9"
 }

@@ -393,7 +393,7 @@ delete_apigee_org(){
 
 components_ready_check(){
   overrides=$1
-  command="$APIGEECTL_HOME"/apigeectl check-ready -f $overrides
+  command="$APIGEECTL_HOME/apigeectl check-ready -f $overrides"
   wait_for_exit0 "$command"
 }
 

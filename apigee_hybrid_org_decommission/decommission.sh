@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 INPUTFILE=$1
 OVERRIDES_FILE="$2"
 
