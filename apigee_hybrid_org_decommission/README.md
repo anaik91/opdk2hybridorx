@@ -2,7 +2,7 @@
 
 
 ## Objective
-To select a specific org in a multi org  Apigee Hybrid Cluster.
+To Decommission a specific Apigee Org in a Multi-Org Apigee Hybrid Cluster.
 
 ## Disclaimer
 This is not an Officially Supported Google Product!
