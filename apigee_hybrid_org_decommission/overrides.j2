@@ -1,0 +1,44 @@
+org: {{ org['spec']['gcpProjectID'] }}
+instanceID: "{{ org['spec']['instanceID'] }}"   ## Must match the instanceID of your existing org.
+
+k8sCluster:
+  name: "{{ org['spec']['clusterName'] }}"
+  region: "{{ org['spec']['clusterRegion'] }}"
+
+gcp:
+  projectID: "{{ org['spec']['gcpProjectID'] }}"
+  name: "{{ org['spec']['clusterName'] }}"
+  region: "{{ org['spec']['clusterRegion'] }}"
+
+namespace: apigee ## must be the same for both new and existing orgs
+
+virtualhosts:
+{% for each_env_group in virtualhosts -%}
+- name: {{ each_env_group['metadata']['labels']['envGroupId'] }}
+  sslSecret: {{ each_env_group['spec']['ports'][0]['tls']['credentialName'] }}
+  tlsMode: {{ each_env_group['spec']['ports'][0]['tls']['mode'] }}
+{% endfor %}
+
+envs:
+{% for each_env in envs -%}
+- name: {{ each_env['spec']['name'] }}
+  serviceAccountSecretRefs:
+    runtime: {{ each_env['spec']['components']['runtime']['appServiceAccountSecretName'] }}
+    synchronizer: {{ each_env['spec']['components']['synchronizer']['appServiceAccountSecretName'] }}
+    udca: {{ each_env['spec']['components']['udca']['appServiceAccountSecretName'] }}
+{% endfor %}
+
+connectAgent:
+  serviceAccountRef: {{ org['spec']['components']['connectAgent']['appServiceAccountSecretName'] }}
+
+mart:
+  serviceAccountRef: {{ org['spec']['components']['mart']['appServiceAccountSecretName'] }}
+
+metrics:
+  serviceAccountRef: {{ org['spec']['components']['connectAgent']['appServiceAccountSecretName'] }}
+
+watcher:
+  serviceAccountRef: {{ org['spec']['components']['watcher']['appServiceAccountSecretName'] }}
+
+udca:
+  serviceAccountRef: {{ org['spec']['components']['udca']['appServiceAccountSecretName'] }}

@@ -392,9 +392,11 @@ delete_apigee_org(){
 }
 
 components_ready_check(){
+  pushd "$HYBRID_HOME"
   overrides=$1
   command="$APIGEECTL_HOME/apigeectl check-ready -f $overrides"
   wait_for_exit0 "$command"
+  popd || return
 }
 
 get_keyspaces_to_drop() {
@@ -507,6 +509,9 @@ purge_cassandra_fs_keyspaces_data() {
 
 fetch_apigee_org() {
   PROJECT_ID="$1"
+  SCRIPT_PATH="$2"
+  GEN_DIR="$SCRIPT_PATH/generated"
+  mkdir -p $GEN_DIR
   ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj)')
   ENC_ORG=$(echo $ORG_DATA| jq -r .metadata.name)
   ENV_DATA=$(kubectl get apigeeenv -n apigee -o json | jq -c --arg prj "$ENC_ORG" -r '[.items[] | select(.spec.organizationRef==$prj)]')
@@ -517,5 +522,9 @@ fetch_apigee_org() {
               --argjson virtualhosts "$VHOSTS_DATA" \
               '$ARGS.named'
   )
-  echo $overrides_data | jq  > overrides_data.json
+  echo $overrides_data | jq  > $GEN_DIR/overrides_data.json
+  python3 $SCRIPT_PATH/generate_overrides.py \
+        --input_file $GEN_DIR/overrides_data.json  \
+        --output_file $GEN_DIR/overrides.yaml \
+        --template_location $SCRIPT_PATH
 }

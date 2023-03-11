@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INPUTFILE=$1
-OVERRIDES_FILE="$2"
+# OVERRIDES_FILE="$2"
 
 SCRIPT_PATH=$(cat $INPUTFILE | jq -r .script_path)
 ORG=$(cat $INPUTFILE | jq -r .project_id)
@@ -9,12 +9,16 @@ CASSANDRA_IMAGE=$(cat $INPUTFILE | jq -r .cassandra_client_image)
 CASSANDRA_POD_NAME="cassandra-client-$(date +%s)"
 source $SCRIPT_PATH/utils.sh
 
-export_path $INPUTFILE
+fetch_apigee_org $ORG $SCRIPT_PATH
+GEN_DIR="$SCRIPT_PATH/generated"
 
-fetch_apigee_org $ORG
+
+export_path $INPUTFILE
+cp "$GEN_DIR/overrides.yaml" $HYBRID_HOME/overrides/overrides.yaml
+OVERRIDES_FILE=$HYBRID_HOME/overrides/overrides.yaml
 
 components_ready_check $OVERRIDES_FILE
-
+exit 0
 delete_apigee_settings $OVERRIDES_FILE "virtualhost"
 
 components_ready_check $OVERRIDES_FILE
