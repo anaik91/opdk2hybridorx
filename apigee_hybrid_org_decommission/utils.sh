@@ -266,6 +266,7 @@ check_cassandra_pods() {
     -o=json | \
     jq -r .status.replicas)
   wait_for_ready $cassandra_desired_replicas "kubectl get sts -n apigee apigee-cassandra-default -o=json | jq -r .status.readyReplicas" "All Cassandra Pods Are UP"
+
 }
 
 check_apigeedatastore() {
@@ -332,7 +333,7 @@ delete_apigee_env_components(){
   mkdir -p "$HYBRID_HOME"/generated
   echo "Deleting Environment  $env!!"
   echo ""$APIGEECTL_HOME"/apigeectl delete -f $overrides --env=$env"
-  "$APIGEECTL_HOME"/apigeectl delete -f $overrides --env=$env --dry-run=true
+  "$APIGEECTL_HOME"/apigeectl delete -f $overrides --env=$env --dry-run=client
   if [ $? -eq 0 ]; then
   "$APIGEECTL_HOME"/apigeectl delete -f $overrides --env=$env --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml || ( sleep 120 && "$APIGEECTL_HOME"/apigeectl delete -f $overrides --env=$env --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml )
   sleep 2 && echo -n "Waiting for Apigeectl delete"
@@ -344,7 +345,8 @@ delete_apigee_env_components(){
 delete_apigee_settings(){
   overrides=$1
   settings=$2
-  if [ -z "$setting" ]; then
+  dry_run="${3:-false}"
+  if [ -z "$settings" ]; then
     echo "setting param is empty !! "
     exit 1
   fi
@@ -352,7 +354,12 @@ delete_apigee_settings(){
   mkdir -p "$HYBRID_HOME"/generated
   echo "Deleting settings  $settings!!"
   echo ""$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings"
-  "$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings --dry-run=true
+  if [ "$dry_run" == "true" ]; then
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings --dry-run=client
+    return
+  else
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings --dry-run=client
+  fi
   if [ $? -eq 0 ]; then
   "$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml || ( sleep 120 && "$APIGEECTL_HOME"/apigeectl delete -f $overrides --settings $settings --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml )
   sleep 2 && echo -n "Waiting for Apigeectl delete"
@@ -363,11 +370,17 @@ delete_apigee_settings(){
 
 delete_all_apigee_envs(){
   overrides=$1
+  dry_run="${2:-false}"
   pushd "$HYBRID_HOME" || return # because apigeectl uses pwd-relative paths
   mkdir -p "$HYBRID_HOME"/generated
   echo "Deleting Environments !!"
   echo ""$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs"
-  "$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs --dry-run=true
+  if [ "$dry_run" == "true" ]; then
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs --dry-run=client
+    return
+  else
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs --dry-run=client
+  fi
   if [ $? -eq 0 ]; then
   "$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml || ( sleep 120 && "$APIGEECTL_HOME"/apigeectl delete -f $overrides --all-envs --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml )
   sleep 2 && echo -n "Waiting for Apigeectl delete"
@@ -378,11 +391,17 @@ delete_all_apigee_envs(){
 
 delete_apigee_org(){
   overrides=$1
+  dry_run="${2:-false}"
   pushd "$HYBRID_HOME" || return # because apigeectl uses pwd-relative paths
   mkdir -p "$HYBRID_HOME"/generated
   echo "Deleting Organization !!"
   echo ""$APIGEECTL_HOME"/apigeectl delete -f $overrides --org"
-  "$APIGEECTL_HOME"/apigeectl delete -f $overrides --org --dry-run=true
+  if [ "$dry_run" == "true" ]; then
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --org --dry-run=client
+    return
+  else
+    "$APIGEECTL_HOME"/apigeectl delete -f $overrides --org --dry-run=client
+  fi
   if [ $? -eq 0 ]; then
   "$APIGEECTL_HOME"/apigeectl delete -f $overrides --org --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml || ( sleep 120 && "$APIGEECTL_HOME"/apigeectl delete -f $overrides --org --print-yaml > "$HYBRID_HOME"/generated/apigee-runtime.yaml )
   sleep 2 && echo -n "Waiting for Apigeectl delete"
@@ -401,8 +420,10 @@ components_ready_check(){
 
 get_keyspaces_to_drop() {
   ORG=$1
+  SCRIPT_PATH="$2"
   APIGEE_ORG=$(echo "$ORG" | tr '-' '_')
-  KEYSPACES_FILE="/tmp/keyspaces.txt"
+  GEN_DIR="$SCRIPT_PATH/generated"
+  KEYSPACES_FILE="$GEN_DIR/keyspaces.txt"
   kubectl \
     exec \
     -it -n \
@@ -412,12 +433,15 @@ get_keyspaces_to_drop() {
 }
 
 create_cassandra_client() {
-  CASSANDRA_POD_NAME="$1"
-  CASSANDRA_IMAGE_NAME="$2"
-  CASSANDRA_CRED_SECRET="$3"
-  CASSANDRA_TLS_SECRET="$4"
+  SCRIPT_PATH="$1"
+  CASSANDRA_POD_NAME="$2"
+  CASSANDRA_IMAGE_NAME="$3"
+  CASSANDRA_CRED_SECRET="$4"
+  CASSANDRA_TLS_SECRET="$5"
+  APIGEE_ORG=$(echo "$ORG" | tr '-' '_')
+  GEN_DIR="$SCRIPT_PATH/generated"
   CASSANDRA_POD_SPEC="cassandra-client-$(date +%s).yaml"
-  cat <<EOT >> /tmp/$CASSANDRA_POD_SPEC
+  cat <<EOT >> $GEN_DIR/$CASSANDRA_POD_SPEC
 apiVersion: v1
 kind: Pod
 metadata:
@@ -427,7 +451,7 @@ metadata:
 spec:
   containers:
   - name: cassandra-client-name
-    image: "<cassandr_image>"
+    image: "$CASSANDRA_IMAGE_NAME"
     imagePullPolicy: Always
     command:
     - sleep
@@ -435,15 +459,15 @@ spec:
     env:
     - name: CASSANDRA_SEEDS
       value: apigee-cassandra-default.apigee.svc.cluster.local
-    - name: APIGEE_DML_USER
+    - name: APIGEE_DDL_USER
       valueFrom:
         secretKeyRef:
-          key: dml.user
+          key: ddl.user
           name: $CASSANDRA_CRED_SECRET
-    - name: APIGEE_DML_PASSWORD
+    - name: APIGEE_DDL_PASSWORD
       valueFrom:
         secretKeyRef:
-          key: dml.password
+          key: ddl.password
           name: $CASSANDRA_CRED_SECRET
     volumeMounts:
     - mountPath: /opt/apigee/ssl
@@ -456,38 +480,43 @@ spec:
       secretName: $CASSANDRA_TLS_SECRET
   restartPolicy: Never
 EOT
-  kubectl apply -f /tmp/$CASSANDRA_POD_SPEC
+  echo "Creating Cassandra Pod"
+  kubectl apply -f $GEN_DIR/$CASSANDRA_POD_SPEC
+  kubectl wait --for=condition=ready pod $CASSANDRA_POD_NAME -n apigee
 }
 
 run_cql_script() {
-  CASSANDRA_POD_NAME="$1"
-  CASSANDRA_IMAGE_NAME="$2"
-  KEYSPACES_FILE="/tmp/keyspaces.txt"
+  SCRIPT_PATH="$1"
+  GEN_DIR="$SCRIPT_PATH/generated"
+  CASSANDRA_POD_NAME="$2"
+  CASSANDRA_IMAGE_NAME="$3"
+  KEYSPACES_FILE="$GEN_DIR/keyspaces.txt"
   NAMESPACE="apigee"
-  CQL_SCRIPT="/tmp/cql_op.sh"
+  CQL_SCRIPT="$GEN_DIR/cql_op.sh"
   CASSANDRA_CQL_SCRIPT_PATH="/tmp/cql_op.sh"
   CASSANDRA_KEYSPACES_PATH="/tmp/keyspaces"
   CASSANDRA_CRED_SECRET="apigee-datastore-default-creds"
   CASSANDRA_TLS_SECRET=$(kubectl get secret \
     -n apigee \
     -o jsonpath='{.items[?(@.metadata.annotations.cert-manager\.io\/certificate-name=="apigee-cassandra-default")].metadata.name}')
-  create_cassandra_client $CASSANDRA_POD_NAME $CASSANDRA_IMAGE_NAME $CASSANDRA_CRED_SECRET $CASSANDRA_TLS_SECRET
-
+  create_cassandra_client $SCRIPT_PATH $CASSANDRA_POD_NAME $CASSANDRA_IMAGE_NAME $CASSANDRA_CRED_SECRET $CASSANDRA_TLS_SECRET
+  echo "Creating Cassandra drop Script"
   cat <<EOT >> $CQL_SCRIPT
 #!/bin/bash
 set -e
-keyspace_file=$1
-for ks in $(cat $keyspace_file)
+for ks in \$(cat /tmp/keyspaces)
 do
-  echo "dropping keyspace $ks"
-  cqlsh ${CASSANDRA_SEEDS} -u ${APIGEE_DML_USER} -p ${APIGEE_DML_PASSWORD} --ssl -e "drop keyspace $ks"
+  echo "dropping keyspace \$ks"
+  cqlsh \${CASSANDRA_SEEDS} -u \${APIGEE_DDL_USER} -p \${APIGEE_DDL_PASSWORD} --ssl -e "drop keyspace \$ks"
 done
 echo "Operation finished !!"
 EOT
-
+  echo "Copying Cassandra drop Script to Cassandra Pod : $CASSANDRA_POD_NAME"
   kubectl cp $CQL_SCRIPT "$NAMESPACE/$CASSANDRA_POD_NAME:$CASSANDRA_CQL_SCRIPT_PATH"
   kubectl cp $KEYSPACES_FILE "$NAMESPACE/$CASSANDRA_POD_NAME:$CASSANDRA_KEYSPACES_PATH"
-  kubectl exec -n "$NAMESPACE" "$CASSANDRA_POD_NAME" -- bash "$CASSANDRA_CQL_SCRIPT_PATH $CASSANDRA_KEYSPACES_PATH"
+  echo "Executing Cassandra drop Script on Cassandra Pod : $CASSANDRA_POD_NAME"
+  kubectl exec -n "$NAMESPACE" "$CASSANDRA_POD_NAME" -- bash "$CASSANDRA_CQL_SCRIPT_PATH"
+  echo "Deleting Cassandra Pod : $CASSANDRA_POD_NAME"
   kubectl delete pod -n "$NAMESPACE" "$CASSANDRA_POD_NAME"
 }
 
@@ -501,6 +530,7 @@ purge_cassandra_fs_keyspaces_data() {
   APIGEE_ORG=$(echo "$ORG" | tr '-' '_')
   for cass_pod in $(kubectl get pods -n apigee -l app=apigee-cassandra -o jsonpath='{.items[*].metadata.name}')
   do
+    kubectl wait --for=condition=ready pod $cass_pod -n apigee
     echo "Cleaning Pod -> $cass_pod"
     kubectl exec -it -n apigee $cass_pod -- find /opt/apigee/data/apigee-cassandra/ -iname "*${APIGEE_ORG}_hybrid" -type d -maxdepth 2 -exec rm -rf {} +
     sleep 2
@@ -512,7 +542,7 @@ fetch_apigee_org() {
   SCRIPT_PATH="$2"
   GEN_DIR="$SCRIPT_PATH/generated"
   mkdir -p $GEN_DIR
-  ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj)')
+  ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj) // {}')
   ENC_ORG=$(echo $ORG_DATA| jq -r .metadata.name)
   ENV_DATA=$(kubectl get apigeeenv -n apigee -o json | jq -c --arg prj "$ENC_ORG" -r '[.items[] | select(.spec.organizationRef==$prj)]')
   VHOSTS_DATA=$(kubectl get ar -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '[.items[] | select(.metadata.labels.org==$prj)]')
@@ -523,8 +553,15 @@ fetch_apigee_org() {
               '$ARGS.named'
   )
   echo $overrides_data | jq  > $GEN_DIR/overrides_data.json
-  python3 $SCRIPT_PATH/generate_overrides.py \
+  if [ $(echo $overrides_data | jq -r .org | jq length) -eq 0 ]; then
+    echo "Apigee Org -> $ENC_ORG with PROJECT_ID : $PROJECT_ID not found in cluster or may have been deleted !"
+  else
+    echo "Apigee Org -> $ENC_ORG with PROJECT_ID : $PROJECT_ID found !"
+    echo "Generating overrides.yaml"
+    python3 $SCRIPT_PATH/generate_overrides.py \
         --input_file $GEN_DIR/overrides_data.json  \
         --output_file $GEN_DIR/overrides.yaml \
         --template_location $SCRIPT_PATH
+    cp "$GEN_DIR/overrides.yaml" $HYBRID_HOME/overrides/overrides.yaml
+  fi
 }
