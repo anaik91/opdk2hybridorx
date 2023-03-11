@@ -9,7 +9,7 @@ CASSANDRA_IMAGE=$(cat $INPUTFILE | jq -r .cassandra_client_image)
 CASSANDRA_POD_NAME="cassandra-client-$(date +%s)"
 DRY_RUN="false"
 
-source $SCRIPT_PATH/utils.sh
+source $SCRIPT_PATH/helpers/utils.sh
 export_path $INPUTFILE
 fetch_apigee_org $ORG $SCRIPT_PATH
 OVERRIDES_FILE=$HYBRID_HOME/overrides/overrides.yaml

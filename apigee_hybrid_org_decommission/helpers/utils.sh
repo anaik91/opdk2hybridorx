@@ -558,10 +558,10 @@ fetch_apigee_org() {
   else
     echo "Apigee Org -> $ENC_ORG with PROJECT_ID : $PROJECT_ID found !"
     echo "Generating overrides.yaml"
-    python3 $SCRIPT_PATH/generate_overrides.py \
+    python3 $SCRIPT_PATH/helpers/generate_overrides.py \
         --input_file $GEN_DIR/overrides_data.json  \
         --output_file $GEN_DIR/overrides.yaml \
-        --template_location $SCRIPT_PATH
+        --template_location $SCRIPT_PATH/helpers
     cp "$GEN_DIR/overrides.yaml" $HYBRID_HOME/overrides/overrides.yaml
   fi
 }
