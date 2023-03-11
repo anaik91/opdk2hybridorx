@@ -27,9 +27,9 @@ class ApigeeXorHybrid:
             'Authorization' : f"Bearer {token}"
         }
     
-    def validate_api(self,proxy_bundle_path):
+    def validate_api(self,api_type,proxy_bundle_path):
         api_name = os.path.basename(proxy_bundle_path).split('.zip')[0]
-        url = f"{self.baseurl}/apis?name={api_name}&action=validate&validate=true"
+        url = f"{self.baseurl}/{api_type}?name={api_name}&action=validate&validate=true"
         files=[
         ('data',(api_name,open(proxy_bundle_path,'rb'),'application/zip'))
         ]

@@ -57,7 +57,7 @@ def main():
         proxies=list_dir(export_dir)
         result[each_api_type] = {}
         for each_bundle in proxies:
-            validation=x.validate_api(f"{export_dir}/{each_bundle}")
+            validation=x.validate_api(each_api_type,f"{export_dir}/{each_bundle}")
             result[each_api_type][each_bundle]=validation
 
     print(json.dumps(result,indent=2))
