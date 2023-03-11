@@ -15,7 +15,7 @@ fetch_apigee_org $ORG $SCRIPT_PATH
 OVERRIDES_FILE=$HYBRID_HOME/overrides/overrides.yaml
 ORG_COUNT=$(cat $GEN_DIR/overrides_data.json | jq -r .org | jq length)
 
-if [ $ORG_COUNT -ne 0 ]; then
+if [ "$ORG_COUNT" -ne 0 ]; then
     components_ready_check $OVERRIDES_FILE
     delete_apigee_settings $OVERRIDES_FILE "virtualhost" $DRY_RUN
     components_ready_check $OVERRIDES_FILE

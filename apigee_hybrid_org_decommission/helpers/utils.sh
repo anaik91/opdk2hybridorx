@@ -542,7 +542,8 @@ fetch_apigee_org() {
   SCRIPT_PATH="$2"
   GEN_DIR="$SCRIPT_PATH/generated"
   mkdir -p $GEN_DIR
-  ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj) // {}')
+  ORG_DATA=$(kubectl get apigeeorg -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '.items[] | select(.spec.gcpProjectID==$prj)')
+  if [ -z "$ORG_DATA" ]; then ORG_DATA="{}"; fi
   ENC_ORG=$(echo $ORG_DATA| jq -r .metadata.name)
   ENV_DATA=$(kubectl get apigeeenv -n apigee -o json | jq -c --arg prj "$ENC_ORG" -r '[.items[] | select(.spec.organizationRef==$prj)]')
   VHOSTS_DATA=$(kubectl get ar -n apigee -o json | jq -c --arg prj "$PROJECT_ID" -r '[.items[] | select(.metadata.labels.org==$prj)]')
@@ -553,7 +554,8 @@ fetch_apigee_org() {
               '$ARGS.named'
   )
   echo $overrides_data | jq  > $GEN_DIR/overrides_data.json
-  if [ $(echo $overrides_data | jq -r .org | jq length) -eq 0 ]; then
+  org_exists=$(echo $overrides_data | jq -r .org | jq length)
+  if [ "$org_exists" -eq 0 ]; then
     echo "Apigee Org -> $ENC_ORG with PROJECT_ID : $PROJECT_ID not found in cluster or may have been deleted !"
   else
     echo "Apigee Org -> $ENC_ORG with PROJECT_ID : $PROJECT_ID found !"
