@@ -2,26 +2,29 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-namespace: api-ingress
+namespace: api-ingress                            # Namespace to deploy addtional ASM 
 
 certmanager:
   issuer:
-    name: apigee-external
+    name: apigee-external                         # Cert Manager Issuser Object Name
 
 ingress:
-  name: shared-ingress
-  host:  external.asm.com
+  name: shared-ingress                            # istio ingress name , will be used as selector for ingress "istio: <name>"
+  host:  external.asm.com                         # Hostname as provided in Apigee Environment Groups
   tls:
-    secret: dev-group-secret
-    mode: SIMPLE
+    secret: dev-group-secret                      # Secret to store Certificates for CN
+    mode: SIMPLE                                  # TLS Mode SIMPLE | MUTUAL
   
 apigee:
-  env_group_host: external.asm.com
+  env_group_host: external.asm.com                # Hostname as provided in Apigee Environment Groups
+  test_proxy_basepath: /mock                      # this is for helm test
   ingress:
+    #############
     # host: 
-    # for hybrid 1.7 and below "istio-ingressgateway.istio-system.svc.cluster.local"
-    # for hybrid 1.8 and above (embdedded ingress) try below snippet
-    # #!/bin/bash
-    # ingress=$(kubectl get svc  -n apigee -l app=apigee-ingressgateway -o jsonpath='{$.items[*].metadata.name}')
-    # host="$ingress.apigee.svc.cluster.local"
+    # ---> for hybrid 1.7 and below "istio-ingressgateway.istio-system.svc.cluster.local"
+    # ---> for hybrid 1.8 and above (embdedded ingress) try below snippet
+    #   # #!/bin/bash
+    #   # ingress=$(kubectl get svc  -n apigee -l app=apigee-ingressgateway -o jsonpath='{$.items[*].metadata.name}')
+    #   # host="$ingress.apigee.svc.cluster.local"
+    #############
     host: apigee-ingressgateway-ingress-apigee-hybrid-3-97e66ab.apigee.svc.cluster.local

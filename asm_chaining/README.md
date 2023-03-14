@@ -24,10 +24,22 @@ This was only tested on GKE ! Needs tweaking for other platforms
 ## Deploy ASM Ingress
 Run the snippet
 ```
-helm install external-asm external_asm/ --debug
+RELEASE_NAME="external-asm"
+helm install $RELEASE_NAME external_asm/ --debug
 ```
 
 ## Testing
+
+### Using Helm test 
+
+Run the below command 
+```
+RELEASE_NAME="external-asm"
+helm test $RELEASE_NAME --logs
+```
+
+### Using Curl locally (provided Ingress IP is reachable) 
+
 Use curl to test
 
 ```
