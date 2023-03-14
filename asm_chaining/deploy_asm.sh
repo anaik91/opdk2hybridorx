@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Refer https://cloud.google.com/service-mesh/docs/external-lb-gateway
 
 PROJECT_ID="apigee-hybrid-378710"
 LOCATION="us-central1"
@@ -20,14 +19,3 @@ chmod +x asmcli
         --ca mesh_ca \
         --option legacy-default-ingressgateway
 #### Deploy ASM ####
-
-###### Deploy Ingress Namespace ######
-kubectl create namespace ${ASM_INGRESSGATEWAY_NAMESPACE}
-
-###### Fetch the revision label on istiod ######
-kubectl get deploy -n istio-system -l app=istiod -o \
-  jsonpath={.items[*].metadata.labels.'istio\.io\/rev'}'{"\n"}'
-
-###### Enable the namespace for injection ######
-kubectl label namespace ${ASM_INGRESSGATEWAY_NAMESPACE} \
-  istio-injection- istio.io/rev=asm-1146-4 --overwrite
