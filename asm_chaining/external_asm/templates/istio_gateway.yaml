@@ -1,0 +1,66 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ $.Values.ingress.name }}-gateway
+  namespace: {{ $.Values.namespace }}
+spec:
+  selector:
+    istio: {{ $.Values.ingress.name }}
+  servers:
+  - port:
+      number: 443
+      name: {{ $.Values.ingress.name }}-https
+      protocol: HTTPS
+    hosts:
+    -  {{ $.Values.ingress.host }}
+    tls:
+      mode: {{ $.Values.ingress.tls.mode }}
+      credentialName: {{ $.Values.ingress.tls.secret }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: {{ $.Values.ingress.name }}-serviceentry
+  namespace: {{ $.Values.namespace }}
+spec:
+  hosts:
+   - {{ $.Values.ingress.host }}
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  resolution: DNS
+  endpoints:
+  - address: {{ $.Values.apigee.ingress.host }}
+    ports:
+      https: 443
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ $.Values.ingress.name }}-destinationrule
+  namespace: {{ $.Values.namespace }}
+spec:
+  host: {{ $.Values.ingress.host }}
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      sni: {{ $.Values.ingress.host }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ $.Values.ingress.name }}-virtualservice
+  namespace: {{ $.Values.namespace }}
+spec:
+  hosts:
+  - {{ $.Values.ingress.host }}
+  gateways:
+  - {{ $.Values.ingress.name }}-gateway
+  http:
+  - route:
+     - destination:
+         host: {{ $.Values.ingress.host }}
+         port:
+           number: 443

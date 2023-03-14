@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $.Values.ingress.name }}
+  namespace: {{ $.Values.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $.Values.ingress.name }}
+  namespace: {{ $.Values.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $.Values.ingress.name }}
+  namespace: {{ $.Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $.Values.ingress.name }}
+subjects:
+- kind: ServiceAccount
+  name: {{ $.Values.ingress.name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Values.ingress.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      istio: {{ $.Values.ingress.name }}
+  template:
+    metadata:
+      annotations:
+        inject.istio.io/templates: gateway
+      labels:
+        istio: {{ $.Values.ingress.name }}
+    spec:
+      serviceAccountName: {{ $.Values.ingress.name }}
+      containers:
+      - name: istio-proxy
+        image: auto
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    networking.gke.io/load-balancer-type: "External"
+  name: {{ $.Values.ingress.name }}
+  labels:
+    istio: {{ $.Values.ingress.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: LoadBalancer
+  ports:
+  - name: {{ $.Values.ingress.name }}-https
+    port: 443
+  selector:
+    istio: {{ $.Values.ingress.name }}

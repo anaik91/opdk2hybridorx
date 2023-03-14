@@ -1,0 +1,27 @@
+# Default values for external_asm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: api-ingress
+
+certmanager:
+  issuer:
+    name: apigee-external
+
+ingress:
+  name: shared-ingress
+  host:  external.asm.com
+  tls:
+    secret: dev-group-secret
+    mode: SIMPLE
+  
+apigee:
+  env_group_host: external.asm.com
+  ingress:
+    # host: 
+    # for hybrid 1.7 and below "istio-ingressgateway.istio-system.svc.cluster.local"
+    # for hybrid 1.8 and above (embdedded ingress) try below snippet
+    # #!/bin/bash
+    # ingress=$(kubectl get svc  -n apigee -l app=apigee-ingressgateway -o jsonpath='{$.items[*].metadata.name}')
+    # host="$ingress.apigee.svc.cluster.local"
+    host: apigee-ingressgateway-ingress-apigee-hybrid-3-97e66ab.apigee.svc.cluster.local
