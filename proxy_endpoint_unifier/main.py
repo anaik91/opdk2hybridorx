@@ -1,4 +1,5 @@
-import json
+import os
+from xorhybrid import ApigeeXorHybrid
 import utils
 
 def main():
@@ -7,6 +8,7 @@ def main():
     proxy_dest_dir = cfg['common']['processed_apis']
     proxy_bundle_directory = cfg['common']['proxy_bundle_directory']
     export_debug_file=cfg.getboolean('common','debug')
+    validation_enabled=cfg.getboolean('validate','enabled')
     utils.delete_folder(proxy_dest_dir)
     utils.delete_folder(proxy_bundle_directory)
     utils.create_dir(proxy_bundle_directory)
@@ -88,6 +90,16 @@ def main():
     if export_debug_file:
         utils.export_debug_log(files)
 
+    if validation_enabled:
+        gcp_project_id=cfg['validate']['gcp_project_id']
+        x=ApigeeXorHybrid(gcp_project_id)
+        x.set_auth_header(os.getenv('APIGEE_ACCESS_TOKEN'))
+        result = {}
+        bundled_proxies=utils.list_dir(proxy_bundle_directory)
+        for each_bundle in bundled_proxies:
+            validation=x.validate_api('apis',f"{proxy_bundle_directory}/{each_bundle}")
+            result[each_bundle]=validation
+            print(f"{each_bundle} ==> Validation : {validation}")
 
 if __name__ == '__main__':
     main()
