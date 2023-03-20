@@ -1,0 +1,135 @@
+Pre-Run -> validate
+Policies
+    -> No XML modificagtion
+    -> XML will be copied or moved 
+    -> XML maybe replaced based onm deprecation
+
+Resources
+    -> No Resource changes
+    -> resources may be copied/moved
+
+TargetEndpoins
+    -> No XML modification
+    -> XMLS maybe moved or copied
+
+ProxyEndpoints
+    -> XML modifications will be there
+    -> Parse each base path and map common base paths as single proxy with one PE and multiple conditiona flows
+    -> Configurable proxy endpoint count || not a priority
+    -> Conditions in Proxy endpoint
+
+    API Proxy 1
+
+    ProxyEndpoint -> /root/v1
+        -> x1 route rule
+        -> x2 conditional  (proxy.pathsuffix MatchesPath "/Login") and (request.verb = "POST")
+    ProxyEndpoint -> /root/v2
+        -> y1 route rule
+        -> y2 conditional (proxy.pathsuffix MatchesPath "/Login") and (request.verb = "POST")
+
+    API Proxy 2
+    /root 
+        -> (x1 + y1)    -> route rules
+        -> <= (x2 + y2) -> conditional 
+            -> (proxy.basepath MatchesPath "") and (proxy.pathsuffix MatchesPath "v1/Login") and (request.verb = "POST")
+            -> (proxy.basepath MatchesPath "") and (proxy.pathsuffix MatchesPath "v2/Login") and (request.verb = "POST")
+
+    apiproxy.basepath
+        https://myhost.example.net/v2/weatherapi/forecastrss?w=12797282
+            -> /v2
+            -> /weatherapi/forecastrss
+    
+
+    proxy.pathsuffix
+    proxy.basepath
+    request.path
+
+Entrypoint
+-> XML modifications will be there
+    -> remove stale ProxyEndpoint
+    -> remove stale TargetEndpoins
+    -> remove stale Policies
+    -> remove stale Resources
+-> new Entrypoints for new basepaths
+    -> Copy entire or Subset ProxyEndpoints
+    -> Copy entire or Subset TargetEndpoins
+    -> Copy entire or Subset Policies
+    -> Copy entire or Subset Resources
+
+
+------------------------------------
+=> Relationships 
+
+ProxyEndpoints -> Conditional Flows
+ProxyEndpoints -> Route Rules -> TargetEndpoins
+ProxyEndpoints -> Policies
+
+Entrypoint (root XML) -> ProxyEndpoints
+
+------------------------------------
+Flow of Automation for one proxy bundle
+
+1) Parse all ProxyEndpoints
+    -> Parse Entrypoint(root XML) 
+        -> Get All ProxyEndpoints from root XML
+        -> Get All Policies from root XML
+        -> Get All TargetEndpoins from root XML
+        -> store as bulk.json
+
+    -> read bulk.json
+        -> declare -> number_of_acceptable_pe = (0 - 5)
+        -> Parse Each ProxyEndpoint XML per Proxy 
+        -> Parse the basepaths form each ProxyEndpoint
+        -> if  (same basepaths existins in multiple ProxyEndpoint)
+            -> Group them together
+                -> # TBD 
+                -> increase the ProxyEndpointcounter +=1
+        -> else 
+            -> x number of distinct ProxyEndpoint
+                -> if ProxyEndpointcounter < number_of_acceptable_pe 
+                    -> increase the ProxyEndpointcounter +=1
+                        -> # TBD 
+                -> else 
+                    -> create new one proxy
+                    -> new counter
+
+        Example : 
+        1 proxy 20 ProxyEndpoints 
+            -> 5 -> common basepaths
+                -> 1 Proxy 1 ProxyEndpoint -> x Conditional Flows 
+            -> 15 -> distinct basepaths 
+                # number_of_acceptable_pe = 5 
+                -> 
+
+    -> new JSON 
+        ->  {
+                "ProxyName" : {
+                    "ProxyEndpoints" : [{
+                        
+                    },
+                    "ProxyEndpoints1" : {
+                        
+                    },
+                    "ProxyEndpoints2" : {
+                        
+                    }],
+                    "Resources" : [],
+                    "Policies" : [],
+                    "TargetEndpoins" : []
+                },"ProxyName" : {
+                    "ProxyEndpoints" : {
+                        
+                    },
+                    "ProxyEndpoints" : {
+                        
+                    }
+                }
+            }
+        -> feed it to bundle Create Engine
+
+
+
+/basepath1
+/basepath2
+/basepath1/api
+/basepath1/ap2

@@ -19,3 +19,6 @@ proxies
 # Ignore binary that it builds
 protoc-gen-bq-schema/protoc-gen-bq-schema
 generated
+apis
+transformed*
+logs
