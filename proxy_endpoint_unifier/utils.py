@@ -420,7 +420,8 @@ def merge_proxy_endpoints(api_dict,basepath,pes):
     for each_pe,each_pe_info in api_dict['ProxyEndpoints'].items():
         if each_pe in pes :
             original_basepath = each_pe_info['ProxyEndpoint']['HTTPProxyConnection']['BasePath']
-            condition=(original_basepath if original_basepath is None else f'(request.path =="{original_basepath}")')
+            # TODO : Build full Request path
+            condition=(original_basepath if original_basepath is None else f'(request.path Matches "{original_basepath}*")')
             copied_flows = (
                 None if each_pe_info['ProxyEndpoint']['Flows'] is None else each_pe_info['ProxyEndpoint']['Flows'].copy()
             )
