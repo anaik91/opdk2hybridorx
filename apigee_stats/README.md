@@ -36,6 +36,78 @@ export APIGEE_ACCESS_TOKEN=$(gcloud auth print-access-token)
 python3 main.py
 ```
 
+## Examples
+
+### Example 1 : Metric - TPS
+setting below params `input.properties`
+``` 
+per_api=false
+select=tps
+```
+
+Output
+
+```{
+  "environments": [
+    {
+      "name": "dev",
+      "metrics": [
+        {
+          "name": "tps",
+          "values": [
+            "0.006876880849234432"
+          ]
+        }
+      ]
+    }
+  ],
+  ....
+}
+```
+
+
+### Example 2 : Metric - Average response time
+setting below params `input.properties`
+``` 
+per_api=true
+select=avg(total_response_time)   
+```
+
+Output
+
+```
+{
+  "environments": [
+    {
+      "name": "dev",
+      "dimensions": [
+        {
+          "name": "az-queue",
+          "metrics": [
+            {
+              "name": "avg(total_response_time)",
+              "values": [
+                "1094.4444444444446"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "hc",
+          "metrics": [
+            {
+              "name": "avg(total_response_time)",
+              "values": [
+                "1024.24"
+              ]
+            }
+          ]
+        },
+  ...
+  ...
+}
+```
+
 
 ## Copyright
 
