@@ -12,7 +12,7 @@ ingress:
   name: shared-ingress                            # istio ingress name , will be used as selector for ingress "istio: <name>"
   host:  external.asm.com                         # Hostname as provided in Apigee Environment Groups
   tls:
-    secret: dev-group-secret                      # Secret to store Certificates for CN
+    secret: dev-group-secret                      # Secret to store Certificates can be <secret> OR <namespace>/<secret>
     mode: SIMPLE                                  # TLS Mode SIMPLE | MUTUAL
   
 apigee:
