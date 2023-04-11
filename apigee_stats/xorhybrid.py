@@ -28,6 +28,14 @@ class ApigeeXorHybrid:
             'Authorization' : f"Bearer {token}"
         }
     
+    def list_environments(self):
+        url=f"{self.baseurl}/environments"
+        response = requests.request("GET", url, headers=self.auth_header)
+        if response.status_code == 200 :
+            return response.json()
+        else:
+            return None
+
     def stats_api(self,env,per_api,select_param,time_range):
         url=f"{self.baseurl}/environments/{env}/stats{'/apiproxy'if per_api else ''}?select={select_param}&timeRange={urlencode(time_range)}"
         response = requests.request("GET", url, headers=self.auth_header)

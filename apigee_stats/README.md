@@ -17,7 +17,7 @@ This is not an Officially Supported Google Product!
 ```
     [common]
     org=apigee-payg-377208                       # Apigee Organization ID / GCP Project ID 
-    env=dev                                      # Apigee Environment Name
+    env=dev                                      # Comma Seperated Apigee Environment Name OR _ALL_ to chose for all envs
     per_api=false                                # Get Per Api Proxy Stats else environment level
     select=tps                                   # Check the links provided below
     timeRange=03/15/2023 00:00~04/04/2023 23:59  # Check the links provided below
@@ -68,7 +68,8 @@ Output
 
 ### Example 2 : Metric - Average response time
 setting below params `input.properties`
-``` 
+```
+env=_ALL_
 per_api=true
 select=avg(total_response_time)   
 ```
@@ -77,34 +78,36 @@ Output
 
 ```
 {
-  "environments": [
-    {
-      "name": "dev",
-      "dimensions": [
-        {
-          "name": "az-queue",
-          "metrics": [
-            {
-              "name": "avg(total_response_time)",
-              "values": [
-                "1094.4444444444446"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "hc",
-          "metrics": [
-            {
-              "name": "avg(total_response_time)",
-              "values": [
-                "1024.24"
-              ]
-            }
-          ]
-        },
-  ...
-  ...
+  "dev": {
+    "name": "dev",
+    "dimensions": [
+      {
+        "name": "proxyflows",
+        "metrics": [
+          {
+            "name": "avg(total_response_time)",
+            "values": [
+              "38.0"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Apigee-OAuth",
+        "metrics": [
+          {
+            "name": "avg(total_response_time)",
+            "values": [
+              "58.26315789473684"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "test": {
+    "name": "test"
+  }
 }
 ```
 

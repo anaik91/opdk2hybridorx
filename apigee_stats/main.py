@@ -28,13 +28,24 @@ def main():
     
     x=ApigeeXorHybrid(org)
     x.set_auth_header(get_access_token())
-    stats=x.stats_api(
-        env,
-        per_api,
-        select,
-        timeRange
-    )
-    print_json(stats)
+    if env == '_ALL_':
+        envs = x.list_environments()
+    else:
+        true_envs = x.list_environments()
+        input_envs = env.split(',')
+        envs = [ env for env in input_envs if  env in true_envs ]
+        if len(envs) < len(input_envs):
+            print('INFO: Skipped Invalid Orgs !')
+    result = {}
+    for each_env in envs:
+        stats=x.stats_api(
+            each_env,
+            per_api,
+            select,
+            timeRange
+        )
+        result[each_env]= stats['environments'][0] if len(stats['environments'])>0 else {}
+    print_json(result)
 
 if __name__ == '__main__':
     main()
